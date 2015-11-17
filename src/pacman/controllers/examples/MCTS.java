@@ -14,7 +14,7 @@ import pacman.game.Game;
  *
  * @author Adit
  */
-public class Simulator {
+public class MCTS {
 
     TreeNode root;
     Game game;
@@ -24,7 +24,7 @@ public class Simulator {
     RandomPacMan rndpm = new RandomPacMan();
     int depth = 0;
 
-    public Simulator(Game game) {
+    public MCTS(Game game) {
         this.game = game;
         this.gamestates = new Stack();
         this.root = new TreeNode();
@@ -71,7 +71,7 @@ public class Simulator {
 
             //Selama bukan leaf telusuri pohon
 
-            while (!node.isLeafNode() && depth < 5) {
+            while (!node.isLeafNode() && depth <= 5) {
                 depth++;
 
                 //pilih child node 

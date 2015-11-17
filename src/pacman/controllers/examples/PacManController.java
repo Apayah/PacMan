@@ -7,46 +7,49 @@ import pacman.game.Game;
 
 public class PacManController extends Controller<Constants.MOVE> /*    */ {
 
-    private Simulator simulator;
+    private MCTS mcts;
     int live = 3;
     int level = 0;
+    int treeuse = 0;
     long lastReverseTime = 0;
 
     public Constants.MOVE getMove(Game game, long timeDue) /*    */ {
 
         Constants.MOVE m = null;
 
-        if (simulator == null) {
+        if (mcts == null) {
 
             //Move pertama
             m = Constants.MOVE.NEUTRAL;
-            simulator = new Simulator(game);
-            simulator.playMove(m);
+            mcts = new MCTS(game);
+            mcts.playMove(m);
         } else {
-            simulator.updateGameState(game);
+            mcts.updateGameState(game);
         }
         //Kalau bukan move pertama
 
         if (m == null) {
             TreeNode selected = null;
-            if (simulator.isAtJunction() || simulator.isAtWall()) {
+            if (mcts.isAtJunction() || mcts.isAtWall()) {
 
-                while (System.currentTimeMillis() < timeDue - 3) {
-                    simulator.run();
+                while (System.currentTimeMillis() < timeDue - 4) {
+                    mcts.run();
                 }
-                selected = simulator.getBestNode();
+                selected = mcts.getBestNode();
                 if (selected == null) {
-                    simulator = new Simulator(game);
+                    mcts = new MCTS(game);
+                    treeuse =0;
                     return game.getPacmanLastMoveMade().opposite();
                 }
                 m = selected.move;
             }
             //Tree Reuse
             if (live > game.getPacmanNumberOfLivesRemaining() || level != game.getCurrentLevel() || lastReverseTime != game.getTimeOfLastGlobalReversal()) {
-                simulator = new Simulator(game);
+                mcts = new MCTS(game);
+                treeuse =0;
             } else {
                 if (selected != null) {
-                    simulator.root = selected;
+                    mcts.root = selected;
                 }
             }
         } else {
@@ -58,6 +61,11 @@ public class PacManController extends Controller<Constants.MOVE> /*    */ {
         live = game.getPacmanNumberOfLivesRemaining();
         level = game.getCurrentLevel();
         lastReverseTime = game.getTimeOfLastGlobalReversal();
+        treeuse++;
+        if(treeuse > 15){
+            mcts = new MCTS(game);
+            treeuse =0;
+        }
         return m;
     }
 
